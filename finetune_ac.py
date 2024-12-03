@@ -38,22 +38,19 @@ policy_kwargs = dict(
 ppo_model = PPO("CnnPolicy", vec_env, verbose=1, policy_kwargs=policy_kwargs)
 
 # Load the pre-trained BC weights from the checkpoint
-# bc_model = BehavioralCloningModule.load_from_checkpoint(
-#     "lightning_logs/version_0/checkpoints/epoch=49-step=8300.ckpt"
-# )
 bc_state_dict = torch.load(
-    "logs/imitation_learning/CarRacing-v3/version_1/checkpoints/epoch=99-step=13600.ckpt"
+    "logs/imitation_learning_c/CarRacing-v3/version_1/checkpoints/epoch=99-step=16600.ckpt"
 )["state_dict"]
-# remove the prefix "policy_network." from the keys
-bc_state_dict = {k.replace("policy_network.", ""): v for k, v in bc_state_dict.items()}
+# bc_state_dict = {k.replace("net.", ""): v for k, v in bc_state_dict.items()}
+bc_state_dict = {k[4:]: v for k, v in bc_state_dict.items() if k.startswith("net.")}
 
 # Load the state dict into PPO's policy network
 # Note: strict=False is used because PPO's policy may have additional attributes
 ppo_model.policy.load_state_dict(bc_state_dict, strict=False)
-# ppo_model.save("ppo_pt_car_racing")
 # %%
 
-log_dir = Path("logs") / "fine_tuned" / f"{env_name}_stack{num_stack}"
+log_dir = Path("logs") / "fine_tuned_ac" / f"{env_name}_stack{num_stack}"
+log_dir.mkdir(parents=True, exist_ok=True)
 
 # Update the environment and log settings for PPO fine-tuning
 ppo_model.set_env(vec_env)
@@ -61,7 +58,7 @@ ppo_model.tensorboard_log = log_dir
 
 # Fine-tune the model using PPO
 ppo_model.learn(total_timesteps=100000)
-ppo_model.save("ppo_fine_tuned_car_racing")
-print(f"Model saved to ppo_fine_tuned_car_racing")
+ppo_model.save("ppo_fine_tuned_car_racing_ac")
+print(f"Model saved to ppo_fine_tuned_car_racing_ac")
 
 # %%

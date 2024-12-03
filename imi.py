@@ -65,7 +65,14 @@ policy_network = model.policy
 bc_module = BehavioralCloningModule(policy_network)
 
 pl_logger = pl.loggers.TensorBoardLogger("logs/imitation_learning", name=env_name)
-trainer = pl.Trainer(max_epochs=50)
+trainer = pl.Trainer(max_epochs=150, logger=pl_logger)
 trainer.fit(bc_module, data_loader)
+trainer.save_checkpoint("bc_model.ckpt")
 
+# %%
+bc_state_dict = {
+    k.replace("policy_network.", ""): v for k, v in bc_module.state_dict().items()
+}
+model.policy.load_state_dict(bc_state_dict, strict=True)
+model.save("ppo_pt_car_racing")
 # %%

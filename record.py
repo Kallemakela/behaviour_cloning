@@ -2,6 +2,7 @@
 #!%load_ext autoreload
 #!%autoreload 2
 
+import time
 from torchvision import transforms
 from datetime import datetime
 import numpy as np
@@ -36,6 +37,7 @@ max_steps = int(1e8)
 state, info = env.reset()
 prev_state = state
 total_reward, avg_reward = 0, 0
+time.sleep(1)
 for step_i in range(max_steps):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -78,14 +80,16 @@ for step_i in range(max_steps):
     if done:
         break
 
-print(f"Step: {step_i}, Total Reward: {avg_reward}")
+    time.sleep(0.05)
+
+print(f"Step: {step_i}, Avg Reward: {total_reward / step_i}")
 
 # Clean up
 env.close()
 pygame.quit()
 
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-data_dir = Path("data")
+data_dir = Path("data_exp")
 data_dir.mkdir(exist_ok=True)
 save_obj(D, str(data_dir / f"{env_name}_{timestamp}.pkl"))
 # %%
