@@ -5,11 +5,13 @@
 from pathlib import Path
 import torch
 import numpy as np
+import pandas as pd
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import VecFrameStack
 from stable_baselines3.common.evaluation import evaluate_policy
 import matplotlib.pyplot as plt
+import seaborn as sns
 import gymnasium as gym
 import pytorch_lightning as pl
 
@@ -20,20 +22,29 @@ from bc_model import BehavioralCloningModule
 
 import torch
 from torch.utils.data import Dataset, DataLoader
+from custom_stack import VecFrameStepStack
+
+np.random.seed(0)
+torch.manual_seed(0)
 
 # %%
-# Create the environment and PPO model
-# Create and wrap the environment
+
 env_name = "CarRacing-v3"
 num_stack = 4
+frame_step = 4
 eval_env = make_vec_env(
     lambda: TorchVisionWrapper(gym.make(env_name, continuous=False)), n_envs=1
 )
-eval_env = VecFrameStack(eval_env, n_stack=num_stack, channels_order="first")
+# eval_env = VecFrameStack(eval_env, n_stack=num_stack, channels_order="first")
+eval_env = VecFrameStepStack(
+    eval_env, n_stack=num_stack, n_step=frame_step, channels_order="first"
+)
 # %%
 model_paths = {
     # "BC + Pretrained Critic": "ppo_pt_car_racing_ac",
     "Pure BC": "ppo_pt_car_racing",
+    "Pure BC (Step 4)": "ppo_pt_car_racing_step4",
+    "Pure BC (Step 10)": "ppo_pt_car_racing_step10",
     # "Fine-Tuned from BC": "ppo_fine_tuned_car_racing",
     # "Fine-Tuned from BC + Pretrained Critic": "ppo_fine_tuned_car_racing_ac",
     # "Baseline PPO": "CarRacing-v3",
@@ -43,27 +54,34 @@ model_paths = {
 evaluation_results = {}
 
 # Load and evaluate each model
+n_eval_episodes = 30
 for model_name, model_path in model_paths.items():
     model = PPO.load(model_path, env=eval_env)
-    # Evaluate the model using 20 episodes
-    mean_reward, std_reward = evaluate_policy(
-        model, eval_env, n_eval_episodes=20, deterministic=True
+    # mean_reward, std_reward, rewards = evaluate_policy(
+    rewards, ep_lens = evaluate_policy(
+        model, eval_env, n_eval_episodes=n_eval_episodes, return_episode_rewards=True
     )
-    evaluation_results[model_name] = (mean_reward, std_reward)
-    print(f"{model_name}: Mean Reward: {mean_reward}, Std Reward: {std_reward}")
-
-# Plotting the results for comparison
-model_names = list(evaluation_results.keys())
-mean_rewards = [evaluation_results[name][0] for name in model_names]
-std_rewards = [evaluation_results[name][1] for name in model_names]
-
-plt.figure(figsize=(10, 6))
-plt.bar(model_names, mean_rewards, yerr=std_rewards, capsize=5, color="skyblue")
-plt.xlabel("Models")
-plt.ylabel("Average Reward")
-plt.title("Model Comparison: Average Reward Across 20 Episodes")
-plt.xticks(rotation=45, ha="right")
-plt.tight_layout()
-plt.show()
+    evaluation_results[model_name] = rewards
+    mu = np.mean(rewards)
+    sigma = np.std(rewards)
+    ste = sigma / np.sqrt(n_eval_episodes)
+    median = np.median(rewards)
+    print(f"{model_name}: Mean Reward: {mu:.2f} +/- {ste:.2f}, med: {median:.2f}")
 
 # %%
+# Plotting the results for comparison
+model_names = list(evaluation_results.keys())
+plot_df = pd.DataFrame(
+    {
+        "Model": np.repeat(model_names, n_eval_episodes),
+        "Episode": np.tile(range(1, n_eval_episodes + 1), len(model_names)),
+        "Reward": np.concatenate(
+            [evaluation_results[model_name] for model_name in model_names]
+        ),
+    }
+)
+sns.swarmplot(data=plot_df, x="Model", y="Reward", alpha=0.5, color="C0")
+sns.violinplot(data=plot_df, x="Model", y="Reward", color="C1")
+plt.title("CarRacing-v3: Episode Rewards")
+plt.savefig(f"car_racing_v3_episode_rewards_step{frame_step}.png")
+plt.show()

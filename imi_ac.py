@@ -170,7 +170,9 @@ trainer = pl.Trainer(max_epochs=100, logger=pl_logger)
 trainer.fit(bc_module, data_loader)
 
 # %%
-bc_state_dict = {k[4:]: v for k, v in bc_module.items() if k.startswith("net.")}
+bc_state_dict = {
+    k[4:]: v for k, v in bc_module.net.state_dict().items() if k.startswith("net.")
+}
 
 model.policy.load_state_dict(bc_state_dict, strict=True)
 model.save("ppo_pt_car_racing_ac")

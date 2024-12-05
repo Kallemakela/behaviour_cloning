@@ -15,6 +15,7 @@ from env import TorchVisionWrapper
 from utils import load_obj
 from baseline_model import CustomCNN
 from bc_model import BehavioralCloningModule
+from custom_stack import VecFrameStepStack
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -41,14 +42,16 @@ actions = torch.tensor([d[1] for d in data])
 dataset = ExpertDataset(observations, actions)
 data_loader = DataLoader(dataset, batch_size=64, shuffle=True)
 
-# Create and wrap the environment
 env_name = "CarRacing-v3"
 num_stack = 4
+frame_step = 4
 vec_env = make_vec_env(
-    lambda: TorchVisionWrapper(gym.make(env_name, continuous=False)), n_envs=4
+    lambda: TorchVisionWrapper(gym.make(env_name, continuous=False)), n_envs=1
 )
-
-vec_env = VecFrameStack(vec_env, n_stack=num_stack, channels_order="first")
+# eval_env = VecFrameStack(eval_env, n_stack=num_stack, channels_order="first")
+vec_env = VecFrameStepStack(
+    vec_env, n_stack=num_stack, n_step=frame_step, channels_order="first"
+)
 # %%
 
 # Load PPO model and extract the policy
@@ -65,7 +68,7 @@ policy_network = model.policy
 bc_module = BehavioralCloningModule(policy_network)
 
 pl_logger = pl.loggers.TensorBoardLogger("logs/imitation_learning", name=env_name)
-trainer = pl.Trainer(max_epochs=150, logger=pl_logger)
+trainer = pl.Trainer(max_epochs=100, logger=pl_logger)
 trainer.fit(bc_module, data_loader)
 trainer.save_checkpoint("bc_model.ckpt")
 
@@ -74,5 +77,7 @@ bc_state_dict = {
     k.replace("policy_network.", ""): v for k, v in bc_module.state_dict().items()
 }
 model.policy.load_state_dict(bc_state_dict, strict=True)
-model.save("ppo_pt_car_racing")
+save_path = f"ppo_pt_car_racing_step{frame_step}"
+model.save(save_path)
+print(f"Model saved at {save_path}")
 # %%
