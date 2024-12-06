@@ -31,7 +31,18 @@ torch.manual_seed(0)
 
 env_name = "CarRacing-v3"
 num_stack = 4
-frame_step = 4
+
+
+model_paths = {
+    "Pure BC": "ppo_pt_car_racing_step1",
+    # "Pure BC (Step 4)": "ppo_pt_car_racing_step4",
+    # "Pure BC (Step 10)": "ppo_pt_car_racing_step10",
+    # "CAC": "ppo_pt_car_racing_ac",
+    # "FT BC": "ppo_fine_tuned_car_racing",
+    # "FT CAC": "ppo_fine_tuned_car_racing_ac",
+    # "Base": "CarRacing-v3",
+}
+frame_step = 1
 eval_env = make_vec_env(
     lambda: TorchVisionWrapper(gym.make(env_name, continuous=False)), n_envs=1
 )
@@ -39,23 +50,14 @@ eval_env = make_vec_env(
 eval_env = VecFrameStepStack(
     eval_env, n_stack=num_stack, n_step=frame_step, channels_order="first"
 )
-# %%
-model_paths = {
-    # "BC + Pretrained Critic": "ppo_pt_car_racing_ac",
-    "Pure BC": "ppo_pt_car_racing",
-    "Pure BC (Step 4)": "ppo_pt_car_racing_step4",
-    "Pure BC (Step 10)": "ppo_pt_car_racing_step10",
-    # "Fine-Tuned from BC": "ppo_fine_tuned_car_racing",
-    # "Fine-Tuned from BC + Pretrained Critic": "ppo_fine_tuned_car_racing_ac",
-    # "Baseline PPO": "CarRacing-v3",
-}
 
 # Initialize storage for results
 evaluation_results = {}
 
 # Load and evaluate each model
 n_eval_episodes = 30
-for model_name, model_path in model_paths.items():
+for mi, (model_name, model_path) in enumerate(model_paths.items()):
+
     model = PPO.load(model_path, env=eval_env)
     # mean_reward, std_reward, rewards = evaluate_policy(
     rewards, ep_lens = evaluate_policy(
@@ -83,5 +85,7 @@ plot_df = pd.DataFrame(
 sns.swarmplot(data=plot_df, x="Model", y="Reward", alpha=0.5, color="C0")
 sns.violinplot(data=plot_df, x="Model", y="Reward", color="C1")
 plt.title("CarRacing-v3: Episode Rewards")
-plt.savefig(f"car_racing_v3_episode_rewards_step{frame_step}.png")
+plt.savefig(f"car_racing_v3_episode_rewards_step.png")
 plt.show()
+
+# %%

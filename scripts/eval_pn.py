@@ -10,7 +10,7 @@ import pytorch_lightning as pl
 
 from utils import *
 from dataset import RLDataset
-from model import PolicyNetworkCNN
+from scripts.model import PolicyNetworkCNN
 
 # %%
 data_file = Path("processed_data/Freeway-v5_20241130172648_processed.pkl")

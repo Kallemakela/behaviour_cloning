@@ -44,7 +44,7 @@ data_loader = DataLoader(dataset, batch_size=64, shuffle=True)
 
 env_name = "CarRacing-v3"
 num_stack = 4
-frame_step = 4
+frame_step = 1
 vec_env = make_vec_env(
     lambda: TorchVisionWrapper(gym.make(env_name, continuous=False)), n_envs=1
 )

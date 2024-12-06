@@ -7,13 +7,19 @@ from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 import numpy as np
 from gymnasium import spaces
-from stable_baselines3.common.vec_env.base_vec_env import VecEnv, VecEnvWrapper
+from stable_baselines3.common.vec_env.base_vec_env import VecEnv
 from stable_baselines3.common.vec_env.stacked_observations import StackedObservations
+from stable_baselines3.common.vec_env import VecFrameStack
 
 
-class VecFrameStepStack(VecEnvWrapper):
+class VecFrameStepStack(VecFrameStack):
     """
-    Frame stacking wrapper for vectorized environment. Designed for image observations.
+    Frame stacking wrapper for vectorized environment with frame skipping. Designed for image observations.
+
+    An observation is formed by the current frame and `n_stack`-1 preceding frames, with `n_step` separation between each frame.
+
+    E.g:
+    `[s_0, s_2, s_4 (current)] (n_stack = 3, n_step = 2)`
 
     :param venv: Vectorized environment to wrap
     :param n_stack: Number of frames to stack
@@ -43,7 +49,9 @@ class VecFrameStepStack(VecEnvWrapper):
             low=low, high=high, dtype=venv.observation_space.dtype
         )
         self.n_step = n_step
-        super().__init__(venv, observation_space=stacked_observation_space)
+        super(VecFrameStack, self).__init__(
+            venv, observation_space=stacked_observation_space
+        )
 
     def step_wait(
         self,
@@ -53,9 +61,7 @@ class VecFrameStepStack(VecEnvWrapper):
         np.ndarray,
         List[Dict[str, Any]],
     ]:
-        observations, rewards, dones, infos = self.venv.step_wait()
-        observations, infos = self.stacked_obs.update(observations, dones, infos)  # type: ignore[arg-type]
-        # pick last observation and every n_step-th observation
+        observations, rewards, dones, infos = super().step_wait()
         observations = observations[:, self.n_step - 1 :: self.n_step]
         return observations, rewards, dones, infos
 
@@ -63,7 +69,6 @@ class VecFrameStepStack(VecEnvWrapper):
         """
         Reset all environments
         """
-        observation = self.venv.reset()
-        observation = self.stacked_obs.reset(observation)  # type: ignore[arg-type]
+        observation = super().reset()
         observation = observation[:, self.n_step - 1 :: self.n_step]
         return observation

@@ -10,7 +10,7 @@ import pytorch_lightning as pl
 
 from utils import *
 from dataset import RLDataset
-from model import PolicyNetworkCNN
+from scripts.model import PolicyNetworkCNN
 
 # %%
 env_name = "Skiing-v5"
