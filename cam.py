@@ -17,12 +17,19 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
+from stable_baselines3.common.utils import set_random_seed
 from pathlib import Path
 
 from env import TorchVisionWrapper
 from utils import load_obj
 from baseline_model import CustomCNN
 from custom_stack import VecFrameStepStack
+
+seed = 1
+np.random.seed(seed)
+torch.manual_seed(seed)
+torch.backends.cudnn.deterministic = True
+set_random_seed(seed)
 
 
 # %%
@@ -34,12 +41,12 @@ def get_cam(model, x, layer):
     def forward_hook(module, input, output):
         features.append(output)
 
-    def backward_hook(module, grad_input, grad_output):
+    def register_full_backward_hook(module, grad_input, grad_output):
         gradients.append(grad_output[0])
 
     # Register hooks
     handle_forward = layer.register_forward_hook(forward_hook)
-    handle_backward = layer.register_backward_hook(backward_hook)
+    handle_backward = layer.register_backward_hook(register_full_backward_hook)
 
     # Forward pass
     dist = model.get_distribution(x)
@@ -120,10 +127,11 @@ print("Action Space:", vec_env.action_space)
 print("Observation Space:", vec_env.observation_space)
 
 
-fig_path = Path("fig/cams")
-fig_path.mkdir(parents=True, exist_ok=True)
-save_path = "ppo_pt_car_racing_step1"
+# save_path = "ppo_pt_car_racing_step1"
 # save_path = "ppo_baseline"
+save_path = "ppo_fine_tuned_car_racing"
+fig_path = Path("fig/cams") / save_path
+fig_path.mkdir(parents=True, exist_ok=True)
 model = PPO.load(save_path, env=vec_env)
 
 obs = vec_env.reset()
@@ -152,5 +160,5 @@ for _ in range(max_steps):
         break
 
 
-# vec_env.close()
+vec_env.close()
 # %%

@@ -18,21 +18,24 @@ from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
 from baseline_model import CustomCNN
 from env import TorchVisionWrapper
+from custom_stack import VecFrameStepStack
 
 # %%
 env_name = "CarRacing-v3"
 num_stack = 4
+frame_step = 4
 vec_env = make_vec_env(
-    lambda: TorchVisionWrapper(gym.make(env_name, continuous=False)), n_envs=4
+    lambda: TorchVisionWrapper(gym.make(env_name, continuous=False)), n_envs=1
 )
-
-vec_env = VecFrameStack(vec_env, n_stack=num_stack, channels_order="first")
+vec_env = VecFrameStepStack(
+    vec_env, n_stack=num_stack, n_step=frame_step, channels_order="first"
+)
 
 print("Action Space:", vec_env.action_space)
 print("Observation Space:", vec_env.observation_space)
 
 # %% Train the agent
-log_dir = Path("logs") / "baseline" / f"{env_name}_stack{num_stack}"
+log_dir = Path("logs") / "baseline" / f"{env_name}_stack{num_stack}_step{frame_step}"
 
 policy_kwargs = dict(
     features_extractor_class=CustomCNN,
@@ -46,7 +49,7 @@ model = PPO(
     policy_kwargs=policy_kwargs,
 )
 model.learn(total_timesteps=500000)
-save_path = f"ppo_baseline"
+save_path = f"ppo_baseline_step{frame_step}"
 model.save(save_path)
 print(f"Model saved to {save_path}")
 # %%

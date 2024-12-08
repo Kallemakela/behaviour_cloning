@@ -63,6 +63,15 @@ class VecFrameStepStack(VecFrameStack):
     ]:
         observations, rewards, dones, infos = super().step_wait()
         observations = observations[:, self.n_step - 1 :: self.n_step]
+
+        # apply the same transformation to the terminal observation
+        for idx, done in enumerate(dones):
+            if done and infos[idx].get("terminal_observation") is not None:
+                # frames are in the first dimension for terminal_observation
+                infos[idx]["terminal_observation"] = infos[idx]["terminal_observation"][
+                    self.n_step - 1 :: self.n_step
+                ]
+
         return observations, rewards, dones, infos
 
     def reset(self) -> Union[np.ndarray, Dict[str, np.ndarray]]:
