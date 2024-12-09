@@ -1,7 +1,5 @@
 # Imitation learning experiment
 
-- td3 bc
-
 ### Results: Regular
 
 | Model       | Mean Reward      | Std Err   | Median  |

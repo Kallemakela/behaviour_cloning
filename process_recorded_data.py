@@ -39,8 +39,11 @@ for data_file in data_files:
 
         action = data[i][1]
         reward = torch.tensor(data[i][2], dtype=torch.float32)
-        ep_reward += reward
         done = data[i][4]
+        # all done states are at successful completions in this dataset
+        if done:
+            reward += 100
+        ep_reward += reward
         D.append((state, action, reward, next_state, done))
     print(f"ep_reward: {ep_reward:.2f}")
 # %%

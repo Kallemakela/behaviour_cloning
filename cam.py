@@ -115,7 +115,9 @@ num_stack = 4
 frame_step = 1
 vec_env = make_vec_env(
     lambda: TorchVisionWrapper(
-        gym.make(env_name, continuous=False, render_mode="rgb_array")
+        gym.make(
+            env_name, continuous=False, render_mode="rgb_array", max_episode_steps=2000
+        )
     ),
     n_envs=1,
 )

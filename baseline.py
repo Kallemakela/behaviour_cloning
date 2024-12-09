@@ -25,7 +25,10 @@ env_name = "CarRacing-v3"
 num_stack = 4
 frame_step = 4
 vec_env = make_vec_env(
-    lambda: TorchVisionWrapper(gym.make(env_name, continuous=False)), n_envs=1
+    lambda: TorchVisionWrapper(
+        gym.make(env_name, continuous=False, max_episode_steps=2000)
+    ),
+    n_envs=1,
 )
 vec_env = VecFrameStepStack(
     vec_env, n_stack=num_stack, n_step=frame_step, channels_order="first"

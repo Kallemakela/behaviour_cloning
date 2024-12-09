@@ -51,7 +51,6 @@ class RolloutDataset(Dataset):
         plt.xlabel("Time Step")
         plt.ylabel("Discounted Return")
         plt.title("Discounted Returns for Each Episode")
-        plt.legend()
         plt.show()
 
     def __len__(self):
@@ -78,7 +77,10 @@ for i in range(len(data)):
     s_prime.append(data[i][3])
     done.append(data[i][4])
 
-dataset = RolloutDataset(s, a, r, s_prime, done, gamma=0.9)
+gamma = 0.99
+dataset = RolloutDataset(s, a, r, s_prime, done, gamma=gamma)
+# %%
+dataset.visualize_discounted_returns()
 # %%
 data_loader = DataLoader(dataset, batch_size=64, shuffle=True)
 
@@ -87,7 +89,10 @@ data_loader = DataLoader(dataset, batch_size=64, shuffle=True)
 env_name = "CarRacing-v3"
 num_stack = 4
 vec_env = make_vec_env(
-    lambda: TorchVisionWrapper(gym.make(env_name, continuous=False)), n_envs=4
+    lambda: TorchVisionWrapper(
+        gym.make(env_name, continuous=False, max_episode_steps=2000)
+    ),
+    n_envs=4,
 )
 
 vec_env = VecFrameStack(vec_env, n_stack=num_stack, channels_order="first")
