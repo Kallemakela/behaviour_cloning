@@ -8,6 +8,7 @@ import torch
 import numpy as np
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.common.utils import set_random_seed
 from stable_baselines3.common.vec_env import VecFrameStack
 
 import gymnasium as gym
@@ -59,29 +60,55 @@ class ExpertDataset(Dataset):
         return self.observations[idx], self.actions[idx]
 
 
+class LazyExpertDataset(Dataset):
+    def __init__(self, data):
+        self.data = data
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        item = self.data[idx]
+        # observation = torch.tensor(item[0], dtype=torch.float32)
+        observation = item[0]
+        # action = torch.tensor(item[1], dtype=torch.long)
+        action = item[1]
+        return observation, action
+
+
+# %%
+
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+    print(f"Using GPU: {torch.cuda.get_device_name(0)}")
+else:
+    device = torch.device("cpu")
+    print("Using CPU")
+# %%
+seed = 0
+torch.manual_seed(seed)
+np.random.seed(seed)
+torch.backends.cudnn.deterministic = True
+set_random_seed(seed)
+
 env_name = "CarRacing-v3"
 num_stack = 4
 frame_step = 4
 
 # Load the demonstrations
 # data = load_obj("processed_data/CarRacing-v3_processed.pkl")
-data_paths = [f"processed_data/CarRacing-v3_{frame_step}_processed_0.pkl"]
+data_paths = [
+    # f"/scratch/work/makelak6/datasets/RL/CarRacing-v3_{frame_step}_processed_0.pkl"
+    f"processed_data/CarRacing-v3_4_processed.pkl"
+]
 data = []
 for dpath in data_paths:
     data.extend(load_obj(dpath))
-
-# data = data[10000:40000]  # works
-# data = data[:10000]  # works
-data = data[:100000]  # does not work
-observations = torch.stack([d[0] for d in data]).float()
-actions = torch.tensor([d[1] for d in data]).long()
-# %%
-mu, std = observations.mean(), observations.std()
-observations = (observations - mu) / std
-# %%
-# Create the dataset and data loader
-dataset = ExpertDataset(observations, actions)
+print(f"Loaded {len(data)} demonstrations")
+dataset = LazyExpertDataset(data)
+print(f"Dataset created with {len(dataset)} samples")
 data_loader = DataLoader(dataset, batch_size=64, shuffle=True)
+print(f"Data loader created with {len(data_loader)} batches")
 
 vec_env = make_vec_env(
     lambda: TorchVisionWrapper(
@@ -92,6 +119,7 @@ vec_env = make_vec_env(
 vec_env = VecFrameStepStack(
     vec_env, n_stack=num_stack, n_step=frame_step, channels_order="first"
 )
+print(f"Observation space: {vec_env.observation_space.shape}")
 # %%
 # Load PPO model and extract the policy
 policy_kwargs = dict(
@@ -99,21 +127,21 @@ policy_kwargs = dict(
     features_extractor_kwargs=dict(features_dim=512),
 )
 model = PPO("CnnPolicy", vec_env, verbose=1, policy_kwargs=policy_kwargs)
-
-# Extract the policy network
 policy_network = model.policy
 
-# Create the BC Lightning Module
-bc_module = BehavioralCloningModule(policy_network)
-# %%
-# for i, (obs, act) in enumerate(data_loader):
-#     break
-# bc_module.training_step((obs, act), i)
+# from pytorch_lightning.tuner.tuning import Tuner
+# tuner = Tuner(trainer)
+# lr_finder = tuner.lr_find(bc_module, data_loader, num_training=1000)
+# lr = lr_finder.suggestion()
+# print(f"Learning rate suggestion: {lr}")
+
+bc_module = BehavioralCloningModule(policy_network, lr=2e-4)
 
 # %%
 pl_logger = pl.loggers.TensorBoardLogger("logs/imitation_learning", name=env_name)
 trainer = pl.Trainer(
-    max_epochs=100,
+    max_epochs=200,
+    accelerator="gpu",
     logger=pl_logger,
     # callbacks=[EvalCallback(model, vec_env)]
 )

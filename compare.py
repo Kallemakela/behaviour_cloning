@@ -35,6 +35,7 @@ frame_step = 4
 
 model_paths = {
     "Pure BC": "ppo_pt_car_racing_step4",
+    # "256": "ppo_pt_car_racing_step4_256",
     # "Pure BC (Step 4)": "ppo_pt_car_racing_step4",
     # "Pure BC (Step 10)": "ppo_pt_car_racing_step10",
     # "CAC": "ppo_pt_car_racing_ac",
@@ -89,7 +90,8 @@ plot_df = pd.DataFrame(
 sns.swarmplot(data=plot_df, x="Model", y="Reward", alpha=0.5, color="C0")
 sns.violinplot(data=plot_df, x="Model", y="Reward", color="C1")
 plt.title("CarRacing-v3: Episode Rewards")
-# plt.savefig(f"car_racing_v3_episode_rewards_step.png")
-plt.show()
+plt.savefig(f"car_racing_v3_episode_rewards_step.png")
+# plt.show()
+plt.close()
 
 # %%

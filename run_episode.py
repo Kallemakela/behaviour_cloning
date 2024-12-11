@@ -38,7 +38,7 @@ render_mode = "rgb_array"
 vec_env = make_vec_env(
     lambda: TorchVisionWrapper(
         gym.make(
-            env_name, continuous=False, render_mode=render_mode, max_episode_steps=1101
+            env_name, continuous=False, render_mode=render_mode, max_episode_steps=1001
         )
     ),
     n_envs=1,
@@ -67,7 +67,7 @@ for ei in range(n_ep):
             break
 
     print(f"Episode {ei}: {ep_r}, Steps: {si + 1}")
-    if si < 1100 and ep_r > 700:
+    if si < 1000 and ep_r > 700:
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         save_dir = Path("data_exp")
         save_path = (

@@ -28,6 +28,7 @@ for data_file in data_files:
         ep_reward += reward
         D.append((state, action, reward, next_state, done))
     print(f"ep_reward: {ep_reward:.2f}")
+print(f"Processed {len(D)} demonstrations")
 # %%
 processed_data_dir = Path("processed_data")
 processed_data_dir.mkdir(exist_ok=True)

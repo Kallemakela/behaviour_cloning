@@ -3,7 +3,7 @@ import pytorch_lightning as pl
 
 
 class BehavioralCloningModule(pl.LightningModule):
-    def __init__(self, policy_network, lr=1e-3):
+    def __init__(self, policy_network, lr=3e-4):
         super().__init__()
         # self.save_hyperparameters()
         self.policy_network = policy_network
