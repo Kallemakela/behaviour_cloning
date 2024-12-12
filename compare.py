@@ -34,8 +34,11 @@ num_stack = 4
 frame_step = 4
 
 model_paths = {
-    "Pure BC": "ppo_pt_car_racing_step4",
+    # "Pure BC": "ppo_pt_car_racing_step4",
+    "Original": "ppo_pt_car_racing_step4_orig",
     # "256": "ppo_pt_car_racing_step4_256",
+    "Biggest": "ppo_pt_car_racing_step4_big",
+    "Bigger": "ppo_pt_car_racing_step4_small",
     # "Pure BC (Step 4)": "ppo_pt_car_racing_step4",
     # "Pure BC (Step 10)": "ppo_pt_car_racing_step10",
     # "CAC": "ppo_pt_car_racing_ac",

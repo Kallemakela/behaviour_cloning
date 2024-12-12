@@ -67,6 +67,26 @@ How well does the model generalize to different frame skips than it was trained 
 ---
 
 
+### Results: Bigger Model
+
+Original model has a dense layer with 256 units in the end of the feature extractor.
+Bigger model has a larger (512) dense layer in the end of the feature extractor.
+Biggest model has a larger output from the last convolutional layer (2304 instead of 256).
+
+No significant differences in performance, if anything, the smaller model performs slightly better.
+
+| Model       | Mean Reward      | Std Err   | Median  | #Params |
+|-------------|------------------|-----------|---------|-|
+| original    | 813.65           | ± 25.14   | 891.45  | 185k    |
+| bigger      | 815.03           | ± 21.98   | 886.25  | 284k    |
+| biggest     | 811.39           | ± 25.07   | 886.05  | 1.351M  |
+---
+
+![big](fig/car_racing_v3_episode_rewards_step_bigger.png)
+![big_train_loss](fig/bigger_train_loss.png)
+
+This is train loss, not reward.
+
 ## CAM
 
 ![cam_turn](fig/cams/cam_turn.jpg)

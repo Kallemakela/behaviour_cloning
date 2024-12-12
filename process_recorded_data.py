@@ -14,7 +14,7 @@ data_dir = Path("data")
 env_name = "CarRacing-v3"
 data_files = sorted(data_dir.glob(f"{env_name}_*.pkl"))
 consecutive_frames = 4
-frame_step = 1
+frame_step = 4
 D = []
 for data_file in data_files:
     data = load_obj(data_file)
@@ -44,7 +44,8 @@ for data_file in data_files:
         if done:
             reward += 100
         ep_reward += reward
-        D.append((state, action, reward, next_state, done))
+        # D.append((state, action, reward, next_state, done))
+        D.append((state, action))
     print(f"ep_reward: {ep_reward:.2f}")
 # %%
 processed_data_dir = Path("processed_data")

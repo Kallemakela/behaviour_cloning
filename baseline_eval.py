@@ -8,6 +8,7 @@ from stable_baselines3.common.env_util import make_vec_env
 from pathlib import Path
 from stable_baselines3.common.vec_env import VecFrameStack
 from stable_baselines3.common.env_checker import check_env
+from stable_baselines3.common.utils import set_random_seed
 import numpy as np
 import torchvision.transforms as T
 import matplotlib.pyplot as plt
@@ -21,9 +22,11 @@ from utils import load_obj
 from baseline_model import CustomCNN
 from custom_stack import VecFrameStepStack
 
+seed = 0
+set_random_seed(seed)
 env_name = "CarRacing-v3"
 num_stack = 4
-frame_step = 1
+frame_step = 4
 vec_env = make_vec_env(
     lambda: TorchVisionWrapper(
         gym.make(
@@ -40,16 +43,22 @@ print("Action Space:", vec_env.action_space)
 print("Observation Space:", vec_env.observation_space)
 # check_env(vec_env)
 
-save_path = "ppo_pt_car_racing_step1"
+save_path = "ppo_pt_car_racing_step4_small"
 model = PPO.load(save_path, env=vec_env)
 
-obs = vec_env.reset()
-max_steps = 2000
-for _ in range(max_steps):
-    action, _states = model.predict(obs)
-    obs, rewards, dones, info = vec_env.step(action)
-    vec_env.render("human")
-    if dones:
-        break
+iters = 10
+for _ in range(iters):
+    obs = vec_env.reset()
+    max_steps = 2000
+    ep_reward = 0
+    for _ in range(max_steps):
+        action, _states = model.predict(obs)
+        obs, rewards, dones, info = vec_env.step(action)
+        ep_reward += rewards
+        vec_env.render("human")
+        if dones:
+            break
+    print(ep_reward)
+    print(f"Episode Reward: {ep_reward[0]:.2f}")
 
 vec_env.close()

@@ -99,7 +99,7 @@ frame_step = 4
 # data = load_obj("processed_data/CarRacing-v3_processed.pkl")
 data_paths = [
     # f"/scratch/work/makelak6/datasets/RL/CarRacing-v3_{frame_step}_processed_0.pkl"
-    f"processed_data/CarRacing-v3_4_processed.pkl"
+    f"processed_data/CarRacing-v3_processed.pkl"
 ]
 data = []
 for dpath in data_paths:
