@@ -11,14 +11,21 @@ log_dirs = [
     Path("logs") / "baseline" / "CarRacing-v3_stack4" / "PPO_1",
     Path("logs") / "fine_tuned" / "CarRacing-v3_stack4" / "PPO_1",
     Path("logs") / "fine_tuned_ac" / "CarRacing-v3_stack4" / "PPO_1",
+    # Path("logs") / "imitation_learning" / "CarRacing-v3" / "version_21",
+    # Path("logs") / "imitation_learning" / "CarRacing-v3" / "version_22",
+    # Path("logs") / "imitation_learning" / "CarRacing-v3" / "version_23",
 ]
 model_names = [
     "Baseline PPO",
     "FT from BC",
     "FT from BC + Pretrained Critic",
+    # "Bigger",
+    # "Biggest",
+    # "Original",
 ]
 scalar_keys = [
-    "rollout/ep_rew_mean",
+    # "rollout/ep_rew_mean",
+    # "train_loss",
 ]
 
 
@@ -43,6 +50,10 @@ plt.xlabel("Steps")
 plt.ylabel("Reward")
 plt.title("CarRacing-v3: Episode mean reward")
 plt.legend()
+# plt.grid()
+# from matplotlib.ticker import FuncFormatter
+# plt.gca().xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{int(x / 1e3)}k"))
+# plt.savefig("bigger_train_loss.png")
 plt.savefig("car_racing_v3_episode_mean_reward.png")
 plt.show()
 

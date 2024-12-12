@@ -123,8 +123,8 @@ print(f"Observation space: {vec_env.observation_space.shape}")
 # %%
 # Load PPO model and extract the policy
 policy_kwargs = dict(
-    features_extractor_class=CustomCNN2,
-    features_extractor_kwargs=dict(features_dim=512),
+    features_extractor_class=CustomCNN,
+    features_extractor_kwargs=dict(features_dim=256),
 )
 model = PPO("CnnPolicy", vec_env, verbose=1, policy_kwargs=policy_kwargs)
 policy_network = model.policy
