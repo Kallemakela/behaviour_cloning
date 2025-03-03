@@ -1,4 +1,8 @@
 # %%
+"""
+Collects expert data using a trained model.
+Uses a condition to save only good episodes. If a BC model is used this is basically iterative BC.
+"""
 #!%load_ext autoreload
 #!%autoreload 2
 
@@ -67,7 +71,7 @@ for ei in range(n_ep):
             break
 
     print(f"Episode {ei}: {ep_r}, Steps: {si + 1}")
-    if si < 1000 and ep_r > 700:
+    if si < 1000 and ep_r > 700:  # save only good episodes
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         save_dir = Path("data_exp")
         save_path = (

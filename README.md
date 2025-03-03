@@ -1,5 +1,8 @@
 # Imitation learning experiment
 
+This experiment compares pure behavioral cloning (BC) and behavioral cloning with critic pretraining (CAC) on the CarRacing-v3 environment.
+Baseline is PPO.
+
 ### Results: Regular
 
 | Model       | Mean Reward      | Std Err   | Median  |
@@ -33,11 +36,11 @@ Frame skip indicates how many frames are skipped between each frame in the stack
 
 4-step model seems to perform the best, but the difference is not significant.
 
-### Results: Frame Skips (Generalization)
+#### Results: Frame Skips (Generalization)
 
 How well does the model generalize to different frame skips than it was trained on?
 
-#### Step Size: 1
+##### Step Size: 1
 
 | Model                | Mean Reward      | Std Err   | Median  |
 |----------------------|------------------|-----------|---------|
@@ -46,7 +49,7 @@ How well does the model generalize to different frame skips than it was trained 
 | Pure BC (Step 10)    | 564.61           | ± 36.57   | 606.72  |
 ---
 
-#### Step Size: 4
+##### Step Size: 4
 
 | Model                | Mean Reward      | Std Err   | Median  |
 |----------------------|------------------|-----------|---------|
@@ -56,7 +59,7 @@ How well does the model generalize to different frame skips than it was trained 
 
 ---
 
-#### Step Size: 10
+##### Step Size: 10
 
 | Model                | Mean Reward      | Std Err   | Median  |
 |----------------------|------------------|-----------|---------|
@@ -65,6 +68,9 @@ How well does the model generalize to different frame skips than it was trained 
 | Pure BC (Step 10)    | 744.27           | ± 40.36   | 881.75  |
 
 ---
+
+Each model performs best on the frame skip it was trained on.
+Step 4 model seems to be the best generalizer.
 
 
 ### Results: Bigger Model
@@ -87,11 +93,12 @@ No significant differences in performance, if anything, the smaller model perfor
 
 This is train loss, not reward.
 
-## CAM
+### Results: CAM (Class Activation Map)
 
 ![cam_turn](fig/cams/cam_turn.jpg)
 
-Cam for turning left for each model. The models is focusing on the inner side of the curve.
+Cam for turning left for each model
+. The models is focusing on the inner side of the curve.
 
 ![cam_start](fig/cams/bc_cam_23.png)
 
@@ -101,7 +108,7 @@ Cam for starting (BC model). The model is focusing on the road ahead.
 
 Cam for a sharp turn in high speed (BC model). The model is focusing on the speedometer, probably to decide if it should brake or not.
 
-## Speed
+### Results: Speed
 
 ![](fig/car_racing_v3_train_reward.png)
 
@@ -121,6 +128,9 @@ For some reason these rewards differ significantly from the ones in the table, w
 
 python record.py # record expert data
 python process_recorded_data.py # process expert data
+
+python collect_expert.py # collect expert model data
+python process_collected_data.py # process expert model data
 
 python imi.py # BC
 python imi_ac.py # BC + Critic pretrain
