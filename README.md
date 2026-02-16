@@ -3,6 +3,7 @@
 This experiment compares pure behavioral cloning (BC) and behavioral cloning with critic pretraining (CAC) on the CarRacing-v3 environment.
 Baseline is PPO.
 Results are collected from 50 evaluation episodes for each model.
+FT stands for fine-tuned after BC.
 
 ### Results: Regular
 
