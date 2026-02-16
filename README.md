@@ -1,7 +1,8 @@
-# Imitation learning experiment
+# Assessing Critic-Pretraining vs. Pure Behavioral Cloning on CarRacing-v3
 
 This experiment compares pure behavioral cloning (BC) and behavioral cloning with critic pretraining (CAC) on the CarRacing-v3 environment.
 Baseline is PPO.
+Results are collected from 50 evaluation episodes for each model.
 
 ### Results: Regular
 
@@ -20,10 +21,78 @@ Pure BC is the strongest model.
 Finetuned BC performs almost as well. 
 Pretrained actor-critic models perform worse, but definitely better than random.
 
+### Results: Bigger Model
 
-### Results: Frame Skips
+Original model has a dense layer with 256 units in the end of the feature extractor.
+Bigger model has a larger (512) dense layer in the end of the feature extractor.
+Biggest model has a larger output from the last convolutional layer (2304 instead of 256).
+
+No significant differences in performance, if anything, the smaller model performs slightly better.
+
+| Model       | Mean Reward      | Std Err   | Median  | #Params |
+|-------------|------------------|-----------|---------|-|
+| original    | 813.65           | ± 25.14   | 891.45  | 185k    |
+| bigger      | 815.03           | ± 21.98   | 886.25  | 284k    |
+| biggest     | 811.39           | ± 25.07   | 886.05  | 1.351M  |
+---
+
+![big](fig/car_racing_v3_episode_rewards_step_bigger.png)
+![big_train_loss](fig/bigger_train_loss.png)
+
+This is train loss, not reward.
+
+### Results: CAM (Class Activation Map)
+
+![cam_turn](fig/cams/cam_turn.jpg)
+
+Cam for turning left for each model. The model is focusing on the inner side of the curve.
+
+![cam_start](fig/cams/bc_cam_23.png)
+
+Cam for starting (BC model). The model is focusing on the road ahead.
+
+![cam_speed](fig/cams/bc_cam_333.png)
+
+Cam for a sharp turn in high speed (BC model). The model is focusing on the speedometer, probably to decide if it should brake or not.
+
+### Results: Convergence speed
+
+![](fig/car_racing_v3_train_reward.png)
+
+Initializing the model with BC weights gives significant boost in the beginning.
+For some reason these rewards differ from the ones in the table, which were calculated using `evaluate_policy`.
+
+## Input
+
+- 4 stacked B/W frames of size 48x48
+- frame step is 4, so e.g. observation 16 includes frames 16, 12, 8, 4
+
+![Input](fig/car_racing_v3_obs.png)
+
+## Usage
+
+```bash
+
+python record.py # record expert data
+python process_recorded_data.py # process expert data
+
+python collect_expert.py # collect expert model data
+python process_collected_data.py # process expert model data
+
+python imi.py # BC
+python imi_ac.py # BC + Critic pretrain
+python finetune.py # finetune BC model
+python finetune_ac.py # finetune BC + Critic pretrain model
+python baseline.py # PPO baseline
+
+python compare.py
+```
+
+
+# Appendix: Frame Skips
 
 Frame skip indicates how many frames are skipped between each frame in the stacked observation.
+Comparison on models with different frame skips:
 
 | Step Size | Model                 | Mean Reward      | Std Err   | Median  |
 |-----------|-----------------------|------------------|-----------|---------|
@@ -71,72 +140,3 @@ How well does the model generalize to different frame skips than it was trained 
 
 Each model performs best on the frame skip it was trained on.
 Step 4 model seems to be the best generalizer.
-
-
-### Results: Bigger Model
-
-Original model has a dense layer with 256 units in the end of the feature extractor.
-Bigger model has a larger (512) dense layer in the end of the feature extractor.
-Biggest model has a larger output from the last convolutional layer (2304 instead of 256).
-
-No significant differences in performance, if anything, the smaller model performs slightly better.
-
-| Model       | Mean Reward      | Std Err   | Median  | #Params |
-|-------------|------------------|-----------|---------|-|
-| original    | 813.65           | ± 25.14   | 891.45  | 185k    |
-| bigger      | 815.03           | ± 21.98   | 886.25  | 284k    |
-| biggest     | 811.39           | ± 25.07   | 886.05  | 1.351M  |
----
-
-![big](fig/car_racing_v3_episode_rewards_step_bigger.png)
-![big_train_loss](fig/bigger_train_loss.png)
-
-This is train loss, not reward.
-
-### Results: CAM (Class Activation Map)
-
-![cam_turn](fig/cams/cam_turn.jpg)
-
-Cam for turning left for each model
-. The models is focusing on the inner side of the curve.
-
-![cam_start](fig/cams/bc_cam_23.png)
-
-Cam for starting (BC model). The model is focusing on the road ahead.
-
-![cam_speed](fig/cams/bc_cam_333.png)
-
-Cam for a sharp turn in high speed (BC model). The model is focusing on the speedometer, probably to decide if it should brake or not.
-
-### Results: Speed
-
-![](fig/car_racing_v3_train_reward.png)
-
-Initializing the model with BC weights gives significant boost in the beginning.
-For some reason these rewards differ significantly from the ones in the table, which were calculated using `evaluate_policy`.
-
-## Input
-
-- 4 stacked B/W frames of size 48x48
-- frame step is 4, so e.g. observation 16 includes frames 16, 12, 8, 4
-
-![Input](fig/car_racing_v3_obs.png)
-
-## Usage
-
-```bash
-
-python record.py # record expert data
-python process_recorded_data.py # process expert data
-
-python collect_expert.py # collect expert model data
-python process_collected_data.py # process expert model data
-
-python imi.py # BC
-python imi_ac.py # BC + Critic pretrain
-python finetune.py # finetune BC model
-python finetune_ac.py # finetune BC + Critic pretrain model
-python baseline.py # PPO baseline
-
-python compare.py
-```
